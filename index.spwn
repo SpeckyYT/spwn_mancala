@@ -1,0 +1,76 @@
+extract obj_props
+
+default_seeds = 4
+pockets = 6
+
+bits = (n:@number) => n.log(2).ceil()
+total_seeds_bits = bits(2 * pockets * default_seeds + 2)
+
+bottom_store = counter(bits = total_seeds_bits)
+bottom_pockets = [counter(default_seeds, bits = total_seeds_bits) for _ in 0..pockets]
+
+top_store = counter(bits = total_seeds_bits)
+top_pockets = [counter(default_seeds, bits = total_seeds_bits) for _ in 0..pockets]
+
+all_pockets = bottom_pockets + [bottom_store] + top_pockets + [top_store]
+
+hand = counter(bits = total_seeds_bits)
+
+// 0..(2*pockets*default_seeds)
+// bottom (left -> right) -> bottom store -> top (left <- right) -> top store
+index = counter(bits = bits(2*pockets)) 
+
+
+// DISPLAY
+"index".to_obj().with(X, 45).with(Y, 105).add()
+index.display(45, 75)
+for i in 0..pockets {
+    bottom_pockets[i].display(195 + i * 45, 45)
+    top_pockets[pockets - i - 1].display(195 + i * 45, 105)
+}
+bottom_store.display(195 + (pockets - 1) * 45 + 60, 75)
+top_store.display(195 - 60, 75)
+
+loop_move = !{
+    index += 1
+    if index >= all_pockets.length { index -= all_pockets.length }
+    hand -= 1
+    all_pockets[index.to_const(0..all_pockets.length)] += 1
+}
+
+move = !{
+    -> () {
+        indexing_index = index.to_const(0..all_pockets.length)
+        hand = all_pockets[indexing_index]
+        all_pockets[indexing_index] = 0
+    } ()
+
+    while_loop(() => hand > 0, () {
+        loop_move!
+    }, delay = 0.1)
+}
+
+wait(1)
+
+index = 0
+move!
+
+wait(1)
+
+index = 8
+move!
+
+wait(1)
+
+index = 2
+move!
+
+wait(1)
+
+index = 11
+move!
+
+wait(1)
+
+index = 1
+move!
