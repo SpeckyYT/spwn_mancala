@@ -1,0 +1,133 @@
+extract obj_props
+
+type @mancala
+
+impl @mancala {
+    new: (pockets: @number, seeds: @number) {
+        bits = (n:@number) => n.log(2).ceil()
+
+        total_seeds = 2 * pockets * seeds + 2
+        total_seeds_bits = bits(total_seeds)
+        
+        bottom_store = counter(bits = total_seeds_bits)
+        bottom_pockets = [counter(seeds, bits = total_seeds_bits) for _ in 0..pockets]
+        
+        top_store = counter(bits = total_seeds_bits)
+        top_pockets = [counter(seeds, bits = total_seeds_bits) for _ in 0..pockets]
+        
+        all_pockets = bottom_pockets + [bottom_store] + top_pockets + [top_store]
+        
+        hand = counter(bits = total_seeds_bits)
+
+        // bottom (left -> right) -> bottom store -> top (left <- right) -> top store
+        index = counter(bits = total_seeds_bits)
+
+        // false (bottom) | true (top)
+        side = counter(false)
+
+        is_moving = counter(false)
+
+        opposite_index = (i: @number) =>  pockets * 2 - i
+
+        // functions
+        fill_hand = !{
+            indexing_index = index.to_const(0..all_pockets.length)
+            hand = all_pockets[indexing_index]
+            all_pockets[indexing_index] = 0
+        }
+        capture = !{
+            current_index = index.to_const(0..all_pockets.length)
+
+            player_side = side != 0
+
+            // check side
+            if @array(0..pockets+1).contains(current_index) != player_side { // if "in bottom" and "player not top"
+                // if the current index is a store/bank
+                if current_index != pockets && current_index != pockets * 2 + 1 {
+                    current_pocket = all_pockets[current_index]
+                    opposite_pocket = all_pockets[opposite_index(current_index)]
+
+                    owner_store = bottom_store if player_side == false else top_store
+
+                    if current_pocket == 1 && opposite_pocket > 0 {
+                        current_pocket -= 1 // optimization goes brr
+                        owner_store += 1 // this is for the current_pocket's stone
+                        opposite_pocket.add_to(owner_store) // optimization goes brr
+                    }
+                }
+            }
+        }
+        loop_move = !{
+            index += 1
+            if index >= all_pockets.length { index -= all_pockets.length }
+            hand -= 1
+            all_pockets[index.to_const(0..all_pockets.length)] += 1
+        }
+        move = !{
+            is_moving = true
+            fill_hand!
+            while_loop(() => hand > 0, () {
+                loop_move!
+            }, delay = 0.1)
+            capture!
+            is_moving = false
+        }
+
+        return @mancala::{
+            // consts
+            pockets,
+            seeds,
+            total_seeds,
+            total_seeds_bits,
+
+            // playfield
+            bottom_pockets,
+            bottom_store,
+            top_pockets,
+            top_store,
+            all_pockets,
+
+            // utils
+            index,
+            hand,
+            side,
+            opposite_index,
+
+            // functions
+            fill_hand,
+            loop_move,
+            move,
+        }
+    },
+    display: (self, x: @number = 75, y: @number = 75, height: @number = 45, index_width: @number = 120, bank_width: @number = 60, slots_width: @number = 45) {
+        top = y + 60
+        middle = y + 30
+        bottom = y
+
+        pockets = self.pockets
+
+        left_bank_offset = x + index_width
+        slots_offset = left_bank_offset + bank_width
+        right_bank_offset = slots_offset + (pockets - 1) * slots_width + bank_width
+
+        let tower_offset = 0
+        info_tower = (title: @string, value: @counter) {
+            current_offset = y + tower_offset * 60
+            title.to_obj().with(X, x).with(Y, current_offset + 30).add()
+            value.display(x, current_offset)
+            tower_offset += 1
+        }
+        info_tower("index", self.index)
+        info_tower("side", self.side)
+
+        // pockets
+        for i in 0..pockets {
+            self.bottom_pockets[i].display(slots_offset + i * slots_width, bottom)
+            self.top_pockets[pockets - i - 1].display(slots_offset + i * slots_width, top)
+        }
+
+        // stores
+        self.bottom_store.display(right_bank_offset, middle)
+        self.top_store.display(left_bank_offset, middle)
+    },
+}

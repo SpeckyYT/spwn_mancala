@@ -7,7 +7,7 @@ This is a little project that generates Mancala in Geometry Dash.
 - [x] display game
 - [ ] game system
   - [x] functional seed moving
-  - [ ] capturing
+  - [x] capturing
 - [ ] player input
   - [ ] 2 player
   - [ ] extra turn
