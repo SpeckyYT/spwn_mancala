@@ -113,7 +113,15 @@ impl @mancala {
             move,
         }
     },
-    display: (self, x: @number = 75, y: @number = 75, height: @number = 45, info_tower_width: @number = 120, bank_width: @number = 60, slots_width: @number = 45) {
+    display: (
+        self,
+        x: @number = 75,
+        y: @number = 75,
+        height: @number = 45,
+        info_tower_width: @number = 120,
+        bank_width: @number = 60,
+        slots_width: @number = 45,
+    ) {
         top = y + 60
         middle = y + 30
         bottom = y
