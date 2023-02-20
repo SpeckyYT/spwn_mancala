@@ -3,31 +3,46 @@ import "lib/"
 pockets = 6
 seeds = 4
 
+test = true
+test_type = "normal"
+
 mancala = @mancala::new(pockets = pockets, seeds = seeds);
 
 mancala.display(
     x = 75,
     y = 75,
     height = 45,
-    index_width = 120,
+    info_tower_width = 120,
     bank_width = 60,
     slots_width = 45,
 )
 
-play_computer_move = (index: @number) {
-    wait(1)
-    mancala.index = index
-    mancala.move!
+if test {
+    play_computer_move = (index: @number) {
+        wait(1)
+        mancala.index = index
+        mancala.move!
+    }
+
+    match test_type {
+        =="normal": () {
+            play_computer_move(0)
+            play_computer_move(8)
+            play_computer_move(2)
+            play_computer_move(11)
+            play_computer_move(1)
+        } (),
+        =="capture": () {
+            play_computer_move(5)
+            play_computer_move(8)
+            play_computer_move(1)
+        } (),
+        else: () {
+            throw 'Unknown test: "{}"'.fmt(test_type)
+        } (),
+    }
+} else {
+    // play as human ??????
+    // how
+    throw "unimplemented"
 }
-
-// normal test
-// play_computer_move(0)
-// play_computer_move(8)
-// play_computer_move(2)
-// play_computer_move(11)
-// play_computer_move(1)
-
-// capture test
-play_computer_move(5)
-play_computer_move(8)
-play_computer_move(1)

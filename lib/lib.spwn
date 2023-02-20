@@ -99,14 +99,14 @@ impl @mancala {
             move,
         }
     },
-    display: (self, x: @number = 75, y: @number = 75, height: @number = 45, index_width: @number = 120, bank_width: @number = 60, slots_width: @number = 45) {
+    display: (self, x: @number = 75, y: @number = 75, height: @number = 45, info_tower_width: @number = 120, bank_width: @number = 60, slots_width: @number = 45) {
         top = y + 60
         middle = y + 30
         bottom = y
 
         pockets = self.pockets
 
-        left_bank_offset = x + index_width
+        left_bank_offset = x + info_tower_width
         slots_offset = left_bank_offset + bank_width
         right_bank_offset = slots_offset + (pockets - 1) * slots_width + bank_width
 
