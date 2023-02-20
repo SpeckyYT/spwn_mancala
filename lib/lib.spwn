@@ -3,7 +3,11 @@ extract obj_props
 type @mancala
 
 impl @mancala {
-    new: (pockets: @number, seeds: @number) {
+    new: (
+        pockets: @number,
+        seeds: @number,
+        automatic_update_side: @bool,
+    ) {
         bits = (n:@number) => n.log(2).ceil()
 
         total_seeds = 2 * pockets * seeds + 2
@@ -30,6 +34,13 @@ impl @mancala {
         opposite_index = (i: @number) =>  pockets * 2 - i
 
         // functions
+        update_side = !{
+            if index <= pockets { // in the bottom (index >= 0 isn't required, since it won't be negative anyways)
+                side = false
+            } else {
+                side = true
+            }
+        }
         fill_hand = !{
             indexing_index = index.to_const(0..all_pockets.length)
             hand = all_pockets[indexing_index]
@@ -38,12 +49,12 @@ impl @mancala {
         capture = !{
             current_index = index.to_const(0..all_pockets.length)
 
-            player_side = side != 0
+            // if the current index is a store/bank
+            if current_index != pockets && current_index != pockets * 2 + 1 {
+                player_side = side != 0
 
-            // check side
-            if @array(0..pockets+1).contains(current_index) != player_side { // if "in bottom" and "player not top"
-                // if the current index is a store/bank
-                if current_index != pockets && current_index != pockets * 2 + 1 {
+                // check side
+                if @array(0..pockets+1).contains(current_index) != player_side { // if "in bottom" and "player not top"
                     current_pocket = all_pockets[current_index]
                     opposite_pocket = all_pockets[opposite_index(current_index)]
 
@@ -59,12 +70,14 @@ impl @mancala {
         }
         loop_move = !{
             index += 1
+            if index == pockets && side == 1 || index == pockets * 2 + 1 && side == 0 { index += 1 }
             if index >= all_pockets.length { index -= all_pockets.length }
             hand -= 1
             all_pockets[index.to_const(0..all_pockets.length)] += 1
         }
         move = !{
             is_moving = true
+            if automatic_update_side { update_side! }
             fill_hand!
             while_loop(() => hand > 0, () {
                 loop_move!
@@ -91,6 +104,7 @@ impl @mancala {
             index,
             hand,
             side,
+            is_moving,
             opposite_index,
 
             // functions
@@ -119,6 +133,8 @@ impl @mancala {
         }
         info_tower("index", self.index)
         info_tower("side", self.side)
+        info_tower("hand", self.hand)
+        info_tower("is moving", self.is_moving)
 
         // pockets
         for i in 0..pockets {

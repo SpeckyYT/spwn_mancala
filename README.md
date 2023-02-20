@@ -5,7 +5,7 @@ This is a little project that generates Mancala in Geometry Dash.
 ## Roadmap
 
 - [x] display game
-- [ ] game system
+- [x] game system
   - [x] functional seed moving
   - [x] capturing
 - [ ] player input

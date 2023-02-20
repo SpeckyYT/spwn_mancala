@@ -6,7 +6,11 @@ seeds = 4
 test = true
 test_type = "normal"
 
-mancala = @mancala::new(pockets = pockets, seeds = seeds);
+mancala = @mancala::new(
+    pockets = pockets,
+    seeds = seeds,
+    automatic_update_side = true,
+);
 
 mancala.display(
     x = 75,
