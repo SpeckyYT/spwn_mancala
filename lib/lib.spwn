@@ -2,6 +2,8 @@ extract obj_props
 
 type @mancala
 
+let is_displayed = false
+
 impl @mancala {
     new: (
         pockets: @number,
@@ -20,6 +22,7 @@ impl @mancala {
         top_pockets = [counter(seeds, bits = total_seeds_bits) for _ in 0..pockets]
         
         all_pockets = bottom_pockets + [bottom_store] + top_pockets + [top_store]
+        all_pockets_colors = all_pockets.map((_) => ?c)
         
         hand = counter(bits = total_seeds_bits)
 
@@ -68,22 +71,27 @@ impl @mancala {
                 }
             }
         }
-        loop_move = !{
+        next_index = !{
             index += 1
             if index == pockets && side == 1 || index == pockets * 2 + 1 && side == 0 { index += 1 }
             if index >= all_pockets.length { index -= all_pockets.length }
+        }
+        loop_move = !{
+            next_index!
             hand -= 1
             all_pockets[index.to_const(0..all_pockets.length)] += 1
         }
         move = !{
-            is_moving = true
-            if automatic_update_side { update_side! }
-            fill_hand!
-            while_loop(() => hand > 0, () {
-                loop_move!
-            }, delay = 0.1)
-            capture!
-            is_moving = false
+            if index != pockets && index != pockets * 2 + 1 {
+                is_moving = true
+                if automatic_update_side { update_side! }
+                fill_hand!
+                while_loop(() => hand > 0, () {
+                    loop_move!
+                }, delay = 0.1)
+                capture!
+                is_moving = false
+            }
         }
 
         return @mancala::{
@@ -106,9 +114,12 @@ impl @mancala {
             side,
             is_moving,
             opposite_index,
+            all_pockets_colors,
 
             // functions
             fill_hand,
+            capture,
+            next_index,
             loop_move,
             move,
         }
@@ -146,12 +157,22 @@ impl @mancala {
 
         // pockets
         for i in 0..pockets {
-            self.bottom_pockets[i].display(slots_offset + i * slots_width, bottom)
-            self.top_pockets[pockets - i - 1].display(slots_offset + i * slots_width, top)
+            self.bottom_pockets[i].to_obj().with(X, slots_offset + i * slots_width).with(Y, bottom).with(COLOR, self.all_pockets_colors[i]).add()
+            self.top_pockets[pockets-i-1].to_obj().with(X, slots_offset + i * slots_width).with(Y, top).with(COLOR, self.all_pockets_colors[2*pockets-i]).add()
         }
 
         // stores
-        self.bottom_store.display(right_bank_offset, middle)
-        self.top_store.display(left_bank_offset, middle)
+        self.bottom_store.to_obj().with(X, right_bank_offset).with(Y, middle).with(COLOR, self.all_pockets_colors[self.pockets]).add()
+        self.top_store.to_obj().with(X, left_bank_offset).with(Y, middle).with(COLOR, self.all_pockets_colors[self.pockets * 2 + 1]).add()
+
+        if !is_displayed {
+            for i in 0..self.all_pockets.length {
+                on(self.index.reaches(i), !{
+                    self.all_pockets_colors[i].pulse(hex("#FF0000"), 0.1, 0, 0.1)
+                })
+            }
+        }
+
+        is_displayed = true
     },
 }

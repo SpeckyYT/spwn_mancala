@@ -46,7 +46,16 @@ if test {
         } (),
     }
 } else {
-    // play as human ??????
-    // how
-    throw "unimplemented"
+    gs = import gamescene
+
+    on(gs.button_a(), !{
+        if mancala.is_moving == 0 {
+            mancala.next_index!
+        }
+    })
+    on(gs.button_b(), !{
+        if mancala.is_moving == 0 {
+            mancala.move!
+        }
+    })
 }
